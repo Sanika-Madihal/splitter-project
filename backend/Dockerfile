@@ -2,12 +2,14 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-COPY package*.json ./
+# Change these lines to include the 'backend/' prefix
+COPY backend/package*.json ./
 
 RUN npm install
 
-COPY . .
+# Change this to copy the backend folder specifically
+COPY backend/ .
 
-EXPOSE 3000
+EXPOSE 10000
 
 CMD ["node", "server.js"]
