@@ -62,7 +62,7 @@ register.registerMetric(settlementAmount);
 
 // --- MIDDLEWARE ---
 // app.use(cors());
-// app.use(express.json());
+app.use(express.json());
 
 // // 1. Response time tracking
 // app.use(responseTime((req, res, time) => {
@@ -87,24 +87,24 @@ register.registerMetric(settlementAmount);
 // app.use(express.static('public')); 
 
 // --- MONITORING & HEALTH ENDPOINTS ---
-// app.get('/metrics', async (req, res) => {
-//     res.setHeader('Content-Type', register.contentType);
-//     const metrics = await register.metrics();
-//     res.send(metrics);
-// });
+app.get('/metrics', async (req, res) => {
+    res.setHeader('Content-Type', register.contentType);
+    const metrics = await register.metrics();
+    res.send(metrics);
+});
 
-// app.get('/health', (req, res) => {
-//     const healthStatus = {
-//         status: 'ok',
-//         service: 'splitsmart-backend',
-//         timestamp: new Date().toISOString(),
-//         mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
-//         uptime: process.uptime(),
-//         memory: process.memoryUsage(),
-//         cpu: process.cpuUsage()
-//     };
-//     res.status(200).json(healthStatus);
-// });
+app.get('/health', (req, res) => {
+    const healthStatus = {
+        status: 'ok',
+        service: 'splitsmart-backend',
+        timestamp: new Date().toISOString(),
+        mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+        uptime: process.uptime(),
+        memory: process.memoryUsage(),
+        cpu: process.cpuUsage()
+    };
+    res.status(200).json(healthStatus);
+});
 
 // --- DATABASE CONNECTION ---
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://admin:splitsmart2024@mongodb:27017/splitsmart?authSource=admin';
@@ -244,7 +244,7 @@ app.post('/api/reset', async (req, res) => {
 app.post('/api/calculate', (req, res) => res.json({ transactions: [] }));
 
 // Serve Frontend (Restored from your previous version)
-// app.get(/.*/, (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
+app.get(/.*/, (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
 // --- START SERVER ---
 const PORT = process.env.PORT || 3000;
