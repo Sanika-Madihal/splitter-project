@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SplitSmart - Group Expense Splitter</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="app-view"></div>
+
+    <div id="toast-container" style="position: fixed; top: 20px; right: 20px; z-index: 1000;"></div>
+
+    <!-- Add Group Modal -->
+    <div id="addGroupModal" class="modal" onclick="if(event.target.id === 'addGroupModal') app.closeModal('addGroupModal')">
+        <div class="modal-content">
+            <button class="modal-close" onclick="app.closeModal('addGroupModal')"><i class="fa-solid fa-xmark"></i></button>
+            <h3>Create New Group</h3>
+            <form id="groupForm">
+                <div class="mb-lg">
+                    <label for="groupName">Group Name</label>
+                    <input type="text" id="groupName" placeholder="e.g., Goa Trip 2024" required>
+                </div>
+                <div class="flex gap-md mb-lg">
+                    <div style="flex: 1;">
+                        <label for="groupStartDate">Start Date</label>
+                        <input type="date" id="groupStartDate" value="2025-11-20" required>
+                    </div>
+                    <div style="flex: 1;">
+                        <label for="groupEndDate">End Date</label>
+                        <input type="date" id="groupEndDate" value="2025-11-27" required>
+                    </div>
+                </div>
+
+                <div class="mb-lg">
+                    <label>Add Members</label>
+                    <p class="helper-text">You are included automatically</p>
+                    <div class="flex gap-md mb-sm">
+                        <input type="text" id="newMemberName" placeholder="Name" style="flex: 1;">
+                        <input type="email" id="newMemberEmail" placeholder="Email" style="flex: 1;">
+                        <button type="button" class="btn btn-secondary" id="addMemberBtn" style="flex-shrink: 0; width: 120px;">
+                            <i class="fa-solid fa-user-plus"></i> Add
+                        </button>
+                    </div>
+                    <div id="pendingMemberChecklist" class="member-checklist"></div>
+                </div>
+                
+                <div class="mb-lg">
+                    <label for="groupCurrency">Base Currency</label>
+                    <select id="groupCurrency" required>
+                        <option value="INR">₹ INR - Indian Rupee</option>
+                        <option value="USD">$ USD - US Dollar</option>
+                        <option value="EUR">€ EUR - Euro</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Create Group</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Expense Modal -->
+    <div id="addExpenseModal" class="modal" onclick="if(event.target.id === 'addExpenseModal') app.closeModal('addExpenseModal')">
+        <div class="modal-content">
+            <button class="modal-close" onclick="app.closeModal('addExpenseModal')"><i class="fa-solid fa-xmark"></i></button>
+            <h3>Add Expense</h3>
+            
+            <form id="expenseForm">
+                <div class="progress-indicator">
+                    <div class="progress-step-item active" data-step="1">
+                        <div class="progress-dot">1</div>
+                        <small>Details</small>
+                    </div>
+                    <div class="progress-step-item" data-step="2">
+                        <div class="progress-dot">2</div>
+                        <small>Split</small>
+                    </div>
+                </div>
+
+                <!-- Step 1: Basic Details -->
+                <div class="expense-step-content" data-step="1">
+                    <div id="groupSelection" class="mb-lg">
+                        <label for="expGroup">Group</label>
+                        <select id="expGroup" required></select>
+                    </div>
+                    <div class="mb-lg">
+                        <label for="expDescription">Description</label>
+                        <input type="text" id="expDescription" placeholder="e.g., Food, Transport, Entertainment" required>
+                    </div>
+                    <div class="flex gap-md mb-lg">
+                        <div style="flex: 1;">
+                            <label for="expAmount">Amount</label>
+                            <input type="number" id="expAmount" placeholder="0.00" step="0.01" required>
+                        </div>
+                        <div style="flex: 1;">
+                            <label for="expCurrency">Currency</label>
+                            <select id="expCurrency" required>
+                                <option value="INR">₹ INR</option>
+                                <option value="USD">$ USD</option>
+                                <option value="EUR">€ EUR</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-lg">
+                        <label for="expDate">Date</label>
+                        <input type="date" id="expDate" value="2025-11-12" required>
+                    </div>
+                </div>
+
+                <!-- Step 2: Split Details -->
+                <div class="expense-step-content" data-step="2">
+                    <div class="mb-lg">
+                        <label>Who Paid?</label>
+                        <p class="helper-text">Select one or more contributors</p>
+                        <div id="expensePayerChecklist" class="member-checklist"></div>
+                    </div>
+                    
+                    <div class="mb-lg">
+                        <label>Split Between</label>
+                        <p class="helper-text">Who should pay for this expense?</p>
+                        <div id="expenseParticipantChecklist" class="member-checklist"></div>
+                    </div>
+
+                    <div class="mb-lg">
+                        <label>Split Method</label>
+                        <div class="split-method-options">
+                            <label class="radio-card">
+                                <input type="radio" name="splitMethod" value="equal" checked>
+                                <span class="radio-label">
+                                    <i class="fa-solid fa-equals"></i> Equal Split
+                                </span>
+                            </label>
+                            <label class="radio-card">
+                                <input type="radio" name="splitMethod" value="custom">
+                                <span class="radio-label">
+                                    <i class="fa-solid fa-calculator"></i> Custom Amounts
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div id="customSplitArea" style="display: none;" class="card p-md"></div>
+                </div>
+
+                <!-- Navigation Buttons -->
+                <div class="flex justify-between mt-xl">
+                    <button type="button" class="btn btn-secondary" id="prevStepBtn" style="display: none;">
+                        <i class="fa-solid fa-arrow-left"></i> Previous
+                    </button>
+                    <button type="button" class="btn btn-primary" id="nextStepBtn" style="margin-left: auto;">
+                        Next <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                    <button type="submit" class="btn btn-success" id="submitExpenseBtn" style="display: none;">
+                        Save Expense
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Registration Success Modal -->
+    <div id="registrationSuccessModal" class="modal">
+        <div class="modal-content text-center" style="max-width: 400px;">
+            <i class="fa-solid fa-check-circle" style="font-size: 4rem; margin-bottom: 1rem; color: var(--color-success);"></i>
+            <h3>Registration Successful!</h3>
+            <p>Your account has been created. You will be redirected to the login page now.</p>
+            <button class="btn btn-primary mt-lg" onclick="app.closeModal('registrationSuccessModal'); app.navigateTo('login')">Go to Login</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

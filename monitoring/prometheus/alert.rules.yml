@@ -1,0 +1,91 @@
+groups:
+  - name: splitsmart_alerts
+    interval: 30s
+    rules:
+      # Backend Service Down
+      - alert: BackendServiceDown
+        expr: up{job="splitsmart-backend"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: backend
+        annotations:
+          summary: "Backend service is down"
+          description: "SplitSmart backend has been down for more than 1 minute"
+
+      # High Response Time
+      - alert: HighResponseTime
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 2
+        for: 5m
+        labels:
+          severity: warning
+          service: backend
+        annotations:
+          summary: "High API response time"
+          description: "95th percentile response time is above 2 seconds"
+
+      # High Error Rate
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status_code=~"5.."}[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          service: backend
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is above 10% for the last 5 minutes"
+
+      # MongoDB Connection Issues
+      - alert: MongoDBDown
+        # This checks if the backend's connection to Mongo is healthy
+        expr: database_operations_total{operation="connect", status="error"} > 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "MongoDB Connection Lost"
+          description: "The backend is reporting that it cannot reach the MongoDB database."
+
+      # High Memory Usage
+      - alert: HighMemoryUsage
+        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes > 0.9
+        for: 5m
+        labels:
+          severity: warning
+          service: system
+        annotations:
+          summary: "High memory usage"
+          description: "Memory usage is above 90%"
+
+      # High CPU Usage
+      - alert: HighCPUUsage
+        expr: 100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+          service: system
+        annotations:
+          summary: "High CPU usage"
+          description: "CPU usage is above 80%"
+
+      # Database Operation Failures
+      - alert: DatabaseOperationFailures
+        expr: rate(database_operations_total{status="error"}[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+          service: database
+        annotations:
+          summary: "Database operation failures detected"
+          description: "Database error rate is above 5%"
+
+      # Large Expense Amount (Suspicious Activity)
+      - alert: LargeExpenseAmount
+        expr: expense_amount_inr > 50000
+        for: 1m
+        labels:
+          severity: info
+          service: business
+        annotations:
+          summary: "Large expense recorded"
+          description: "An expense over ₹50,000 was recorded"

@@ -1,0 +1,74 @@
+global:
+  scrape_interval: 15s     # How often to scrape targets by default
+  evaluation_interval: 15s # How often to evaluate rules
+  scrape_timeout: 10s      # Timeout before a scrape is considered failed
+  external_labels:
+    cluster: 'splitsmart-prod'
+    environment: 'production'
+
+# Alerting configuration (Points to the Alertmanager container)
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ['alertmanager:9093']
+
+# Load rules once and periodically evaluate them
+rule_files:
+  - "alert.rules.yml"
+
+# Scrape configurations
+scrape_configs:
+  # 1. Prometheus self-monitoring
+  - job_name: 'prometheus'
+    scrape_interval: 5s
+    static_configs:
+      - targets: ['localhost:9090']
+        labels:
+          service: 'prometheus'
+
+  # 2. SplitSmart Backend API (Node.js)
+  - job_name: 'splitsmart-backend'
+    scrape_interval: 10s
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['backend:3000']
+        labels:
+          service: 'backend'
+          app: 'splitsmart'
+
+  # 3. MongoDB Exporter (Database Metrics)
+  - job_name: 'mongodb-exporter'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['mongodb-exporter:9216']
+        labels:
+          service: 'mongodb'
+          app: 'splitsmart'
+
+  # 4. Node Exporter (Host System Metrics)
+  - job_name: 'node-exporter'
+    scrape_interval: 15s
+    static_configs:
+      - targets: ['node-exporter:9100']
+        labels:
+          service: 'node-exporter'
+          app: 'splitsmart'
+
+  # 5. Nginx Exporter (Frontend/Static Metrics)
+  - job_name: 'nginx-exporter'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['nginx-exporter:9113']
+        labels:
+          service: 'nginx'
+          app: 'splitsmart'
+
+  # 6. cAdvisor (Container Resource Metrics)
+  - job_name: 'cadvisor'
+    scrape_interval: 15s
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['cadvisor:8080']
+        labels:
+          service: 'cadvisor'
+          app: 'splitsmart'
