@@ -61,7 +61,7 @@ register.registerMetric(expenseAmount);
 register.registerMetric(settlementAmount);
 
 // --- MIDDLEWARE ---
-// app.use(cors());
+app.use(cors());
 app.use(express.json());
 
 // // 1. Response time tracking
@@ -84,7 +84,7 @@ app.use(express.json());
 // });
 
 // // 3. Static Files (Restored from your previous version)
-// app.use(express.static('public')); 
+app.use(express.static(path.join(__dirname, '..', 'frontend', 'public')));
 
 // --- MONITORING & HEALTH ENDPOINTS ---
 app.get('/metrics', async (req, res) => {
