@@ -1,6 +1,6 @@
 // --- 1. Global App State and Core Data Structure ---
 
-const BASE_URL = '';
+const BASE_URL = 'https://splitsmart-backend.onrender.com';
 
 const App = {
     isAuthenticated: false,
